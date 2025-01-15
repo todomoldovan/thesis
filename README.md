@@ -1,9 +1,6 @@
 # Measuring Commitment to Collective Grassroots Movements
 
-This is the source code for the MSc thesis by [Theodora Moldovan](AUTHOR1URL).
-
-**Preprint**: [arXiv:XXXX.XXXXX](https://arxiv.org/abs/XXXX.XXXXX)  
-**Data repository**: [zenodo.XXXXXXX](https://zenodo.org/record/XXXXXXX)  
+This is the source code for the MSc thesis by [Theodora Moldovan]([https://www.linkedin.com/in/theodora-moldovan/]).
 
 ## Installation
 First clone the repository:

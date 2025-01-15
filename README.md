@@ -1,26 +1,15 @@
-The purpose of this template is to be a foundation for creating a new research project, specifically for data/network science research in the [NERDS research group](https://nerds.itu.dk/) - but feel free to use it in any way. The template comes with a basic folder structure and a workflow adapted for programming using Python.
+# Measuring Commitment to Collective Grassroots Movements
 
-⚠️ **Read [TEMPLATE.md](TEMPLATE.md) to know how to use the template** ⚠️
-
-***
-
-# PROJECTNAME
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-
-This is the source code for the scientific paper/project [*PROJECTNAME*](PAPERURL) by [AUTHOR1](AUTHOR1URL), [AUTHOR2](AUTHOR2URL), and [AUTHOR3](AUTHOR3URL). The code SHORTEXPLANATION.
+This is the source code for the MSc thesis by [Theodora Moldovan](AUTHOR1URL).
 
 **Preprint**: [arXiv:XXXX.XXXXX](https://arxiv.org/abs/XXXX.XXXXX)  
 **Data repository**: [zenodo.XXXXXXX](https://zenodo.org/record/XXXXXXX)  
-
-[![PROJECTNAME](SPLASHIMAGE.JPG/PNG/GIF)](PROJECTURL)
 
 ## Installation
 First clone the repository:
 
 ```
-git clone https://github.com/USER/REPO.git
+git clone https://github.com/todomoldovan/thesis.git
 ```
 
 Go to the cloned folder and create a new virtual environment. You can either create a new virtual environment then install the necessary dependencies with `pip` using the `requirements.txt` file:
@@ -61,11 +50,5 @@ You can now run `jupyter lab` with kernel `ENVNAME` (Kernel > Change Kernel > EN
 ├── environment.yml         <- Environment file to set up the environment using conda/mamba
 └── requirements.txt        <- Requirements file to set up the environment using pip
 ```
-
-## Credits
-
-Please cite as: AUTHOR1, AUTHOR2, and AUTHOR3, PROJECTNAME, JOURNAL (YYYY), DOIURL  
-
-Development of PROJECTNAME was supported by FUNDER.
 
 

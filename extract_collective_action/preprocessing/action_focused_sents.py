@@ -80,9 +80,9 @@ for i, row in tqdm(target_df.iterrows()):
         continue
     action_text = get_action_sents(text)
     if test:
-        list_texts_tosave.append(row['CommentID'], row['Subreddit'], row['OriginalText'], action_text, row['Label'])
+        list_texts_tosave.append([row['CommentID'], row['Subreddit'], row['OriginalText'], action_text, row['Label']])
     else:
-        list_texts_tosave.append(row['CommentID'], row['Subreddit'], row['OriginalText'], action_text, row['Label'], row["AugmentationType"])
+        list_texts_tosave.append([row['CommentID'], row['Subreddit'], row['OriginalText'], action_text, row['Label'], row["AugmentationType"]])
 
 # save to csv
 if test:

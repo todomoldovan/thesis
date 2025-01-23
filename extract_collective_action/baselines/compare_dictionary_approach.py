@@ -42,4 +42,4 @@ values_action = df_dict_action[0].tolist()
 
 df_test["perc_action_words"] = df_test["ActionFocusedText"].apply(lambda x: len(match_words(values_action, x))/len(x.split()) if len(x.split()) > 0 else 0)
 
-df_test.to_csv(f"../data/predictions/predictions/predictions_dictionary_based.csv", index=False)
+df_test.to_csv(f"../data/predictions/predictions_dictionary_based.csv", index=False)

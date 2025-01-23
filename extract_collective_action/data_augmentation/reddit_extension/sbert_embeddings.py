@@ -8,9 +8,9 @@ from tqdm import tqdm
 MAX_SENTENCE_LENGTH = 256
 OVERLAP = 64
 
-training = False
+training = True
 if training:
-    augmentation_type = "RedditExtension" # "RedditExtension" or "Synthetic" or "None"
+    augmentation_type = "None" # "RedditExtension" or "Synthetic" or "None"
     tag = f"training_{augmentation_type}"
 else:
     tag = "test"

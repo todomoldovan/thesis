@@ -252,3 +252,6 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,macos,windows
 
+extract_collective_action/data/comments_top2k_2018_climate_change.csv
+extract_collective_action/data/predictions/predictions_roberta_simplified_synthetic_weights_downstream_non-filtere.csv
+extract_collective_action/data/predictions/predictions_roberta_simplified_synthetic_weights_downstream_climate_change.csv

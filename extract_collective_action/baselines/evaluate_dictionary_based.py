@@ -30,6 +30,7 @@ for label in labels:
     y_true = np.array(y_true.values)
 
     y_pred = np.array(test_pred["perc_action_words"].values)
+    print(f"Unique classes in y_true: {np.unique(y_true, return_counts=True)}")
     roc_auc = roc_auc_score(y_true, y_pred)
     fpr, tpr, thresholds = roc_curve(y_true, y_pred)
     # get threshold on the top-right corner

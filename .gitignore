@@ -8,7 +8,8 @@
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -255,3 +256,11 @@ $RECYCLE.BIN/
 extract_collective_action/data/comments_top2k_2018_climate_change.csv
 extract_collective_action/data/predictions/predictions_roberta_simplified_synthetic_weights_downstream_non-filtere.csv
 extract_collective_action/data/predictions/predictions_roberta_simplified_synthetic_weights_downstream_climate_change.csv
+data/episodeLevelDataSample.jsonl
+data/speakerTurnDataSample.jsonl
+data/podcast_episodes.csv
+data/podcast_episodes_action_focused.csv
+data/podcast_episodes_action_predictions.csv
+data/podcast_episodes_tokenized.csv
+data/podcastindex_feeds.db 
+notebooks/data.db

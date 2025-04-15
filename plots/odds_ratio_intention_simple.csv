@@ -1,0 +1,4 @@
+category,odds_ratio,lower_ci,upper_ci
+ambiguous,3.555214207526829,-inf,inf
+negative,4.391992559019331,-inf,inf
+positive,4.200769059513665,3.8016926734883913,4.59984544553894

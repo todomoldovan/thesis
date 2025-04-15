@@ -295,3 +295,8 @@ data/sentences_with_metadata_singles_fixed.csv
 notebooks/10k_sample_csv.ipynb
 server/10k_sample_analysis.ipynb
 notebooks/paragraph_turns_with_emotions.csv
+/notebooks/trained_models
+notebooks/best_model/pytorch_model.bin
+/notebooks/best_model
+notebooks/llm_anger.py
+notebooks/new_emotions.ipynb

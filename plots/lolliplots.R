@@ -27,6 +27,27 @@ data <- odds_ratio_problem_solution %>%
   left_join(odds_ratio_intention %>% select(emotion, odds_ratio) %>% rename(value3 = odds_ratio), by = "emotion") %>%
   left_join(odds_ratio_execution %>% select(emotion, odds_ratio) %>% rename(value4 = odds_ratio), by = "emotion")
 
+# custom_order <- c("love", "love_card", "love_zs", 
+#                   "optimism", "optimism_card", "optimism_zs", 
+#                   "excitement", "excitement_zs",
+#                   "pride", "pride_zs", 
+#                   "relief", "relief_zs",
+#                   "fear", "fear_ekman", "fear_card", "fear_zs",
+#                   "anger", "anger_ekman", "anger_card", "anger_zs", 
+#                   "disgust", "disgust_ekman", "disgust_card", "disgust_zs", 
+#                   "disappointment", "disappointment_zs",
+#                   "guilt_zs",
+#                   "surprise", "surprise_ekman", "surprise_card", "surprise_zs")
+
+custom_order <- c("admiration", "amusement", "desire", "gratitude", "joy", "love", "optimism", "pride",
+                  "anger", "embarrassment", "fear", "remorse", "sadness",
+                  "curiosity", "surprise")
+
+#Reorder the data frame
+data <- data %>%
+  mutate(emotion = factor(emotion, levels = custom_order)) %>%
+  arrange(emotion)
+
 # Reshape data for ggplot
 data_long <- data %>%
   pivot_longer(cols = starts_with("value"), names_to = "variable", values_to = "odds_ratio_value")

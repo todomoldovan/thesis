@@ -7,12 +7,42 @@ library(knitr)
 library(kableExtra)
 library(lubridate)
 
-paragraph_turns <- read_csv("../data/paragraph_turns_with_emotions.csv")
+paragraph_turns <- read_csv("../data/paragraph_turns_ekman.csv")
+paragraph_turns_emotions <- read_csv("../data/paragraph_turns_10emotions.csv")
+paragraph_turns_2 <- read_csv("../data/paragraph_turns_new_emotions.csv")
+speaker_turns <- read_csv("../data/10ksample_speakerturn_full.csv")
+#episodes_all_all <- read_csv("../data/138ksample.csv")
 episodes_all <- read_csv("../data/episodes_with_id.csv")
 episodes <- read_csv("../data/filtered_episodes_with_id.csv")
 
 names(paragraph_turns)
 names(episodes)
+
+################################################################################################
+# EMOTIONS
+################################################################################################
+emotions_data <- paragraph_turns_2 %>%
+  select(surprise, love, optimism, fear, anger, disgust)
+emotions_long <- emotions_data %>%
+  gather(key = "emotion", value = "weight")
+ggplot(emotions_long, aes(x = weight, fill = emotion)) +
+  geom_histogram(position = "dodge", bins = 30, alpha = 0.7) +
+  facet_wrap(~ emotion, scales = "free_x") +
+  labs(title = "Distributions of Emotion Weights",
+       x = "Weight",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "none")
+columns_of_interest <- c("surprise", "love", "optimism", "fear", "anger", "disgust")
+percentiles_85 <- sapply(paragraph_turns_2[columns_of_interest], 
+                         function(x) quantile(x, 0.85, na.rm = TRUE))
+counts_above_85 <- sapply(paragraph_turns_2[columns_of_interest], 
+                           function(x) sum(x > 0.85, na.rm = TRUE))
+
+# emotions
+anger_counts <- paragraph_turns_2 %>% count(anger, sort = TRUE)
+kable(anger_counts, format = "latex", booktabs = TRUE, caption = "Anger Counts") %>%
+  kable_styling(latex_options = c("hold_position", "striped"))
 
 ################################################################################################
 # EPISODES
@@ -41,14 +71,17 @@ kable(category_counts, format = "latex", booktabs = TRUE, caption = "Unique Podc
 episodes <- episodes %>% mutate(createdOn = as.Date(episodeDateLocalized))
 episodes <- episodes %>% mutate(date = ymd_hms(episodeDateLocalized))
 episodes <- episodes %>% mutate(date = as.Date(date))
+full_dates <- data.frame(date = seq(min(episodes$date), max(episodes$date), by = "day"))
 episodes_by_day <- episodes %>% count(date)
+episodes_by_day <- full_dates %>% left_join(episodes_by_day, by = "date") %>%
+  mutate(n = replace_na(n, 0))  # Fill missing counts with 0
 pdf("episodes_time_series.pdf", width = 8, height = 6)
 highlight_dates <- as.Date(c("2020-05-25", "2020-06-03"))
 highlight_points <- episodes_by_day[episodes_by_day$date %in% highlight_dates, ]
 ggplot(episodes_by_day, aes(x = date, y = n)) +
   geom_line() +
   geom_point(data = highlight_points, aes(x = date, y = n), 
-             color = "red", size = 3) +  # customize dot color/size here
+             color = "maroon", size = 3) +  # customize dot color/size here
   labs(x = "Date",
        y = "Number of Episodes") +
   theme_minimal() +
@@ -59,25 +92,121 @@ ggplot(episodes_by_day, aes(x = date, y = n)) +
 dev.off()
 
 # date for selected vs all episodes
-episodes <- episodes %>% mutate(createdOn = as.Date(episodeDateLocalized))
-episodes <- episodes %>% mutate(date = ymd_hms(episodeDateLocalized))
-episodes <- episodes %>% mutate(date = as.Date(date))
-episodes_by_day <- episodes %>% count(date)
-episodes_all <- episodes_all %>% mutate(createdOn = as.Date(episodeDateLocalized))
-episodes_all <- episodes_all %>% mutate(date = ymd_hms(episodeDateLocalized))
-episodes_all <- episodes_all %>% mutate(date = as.Date(date))
-episodes_all_by_day <- episodes_all %>% count(date)
-episodes_by_day$source <- "Episodes"
-episodes_all_by_day$source <- "Episodes_all"
-combined_data <- bind_rows(episodes_by_day, episodes_all_by_day)
-ggplot(combined_data, aes(x = date, y = n, color = source)) +
+episodes <- episodes %>%
+  mutate(
+    createdOn = as.Date(episodeDateLocalized),
+    date = ymd_hms(episodeDateLocalized),
+    date = as.Date(date)
+  )
+episodes_by_day <- episodes %>%
+  count(date) %>%
+  mutate(source = "Filtered episodes")
+episodes_all <- episodes_all %>%
+  mutate(
+    createdOn = as.Date(episodeDateLocalized),
+    date = ymd_hms(episodeDateLocalized),
+    date = as.Date(date)
+  )
+episodes_all_by_day <- episodes_all %>%
+  count(date) %>%
+  mutate(source = "Diarized episodes")
+all_dates <- tibble(
+  date = seq(
+    from = min(c(min(episodes_by_day$date), min(episodes_all_by_day$date))),
+    to = max(c(max(episodes_by_day$date), max(episodes_all_by_day$date))),
+    by = "day"
+  )
+)
+episodes_by_day_filled <- all_dates %>%
+  left_join(episodes_by_day, by = "date") %>%
+  mutate(n = replace_na(n, 0), source = replace_na(source, "Filtered episodes"))
+episodes_all_by_day_filled <- all_dates %>%
+  left_join(episodes_all_by_day, by = "date") %>%
+  mutate(n = replace_na(n, 0), source = replace_na(source, "Diarized episodes"))
+combined_data <- bind_rows(episodes_by_day_filled, episodes_all_by_day_filled)
+pdf("episodes_time_series_comparison.pdf", width = 12, height = 6)
+print(ggplot(combined_data, aes(x = date, y = n, color = source)) +
   geom_line() +
-  labs(x = "Date", y = "Number of Episodes") +
+  scale_color_manual(values = c(
+    "Diarized episodes" = "black",
+    "Filtered episodes" = "maroon"
+  )) +
+  labs(x = "Date", y = "Number of Episodes", color = NULL) +
   theme_minimal() +
   theme(
-    axis.text = element_text(size = 14),
-    axis.title = element_text(size = 16)
-  )
+    axis.text = element_text(size = 18),
+    axis.title = element_text(size = 20),
+    legend.text = element_text(size = 18)
+  ))
+dev.off()
+
+# # date for selected vs all vs all all
+# episodes <- episodes %>%
+#   mutate(
+#     createdOn = as.Date(episodeDateLocalized),
+#     date = ymd_hms(episodeDateLocalized),
+#     date = as.Date(date)
+#   )
+# episodes_by_day <- episodes %>%
+#   count(date) %>%
+#   mutate(source = "Filtered episodes")
+# episodes_all <- episodes_all %>%
+#   mutate(
+#     createdOn = as.Date(episodeDateLocalized),
+#     date = ymd_hms(episodeDateLocalized),
+#     date = as.Date(date)
+#   )
+# episodes_all_by_day <- episodes_all %>%
+#   count(date) %>%
+#   mutate(source = "Diarized episodes")
+# episodes_all_all <- episodes_all_all %>%
+#   mutate(
+#     createdOn = as.Date(episodeDateLocalized),
+#     date = ymd_hms(episodeDateLocalized),
+#     date = as.Date(date)
+#   )
+# episodes_all_all_by_day <- episodes_all_all %>%
+#   count(date) %>%
+#   mutate(source = "All episodes")
+# all_dates <- tibble(
+#   date = seq(
+#     from = min(c(min(episodes_by_day$date), min(episodes_all_by_day$date), min(episodes_all_all_by_day$date))),
+#     to = max(c(max(episodes_by_day$date), max(episodes_all_by_day$date), max(episodes_all_all_by_day$date))),
+#     by = "day"
+#   )
+# )
+# episodes_by_day_filled <- all_dates %>%
+#   left_join(episodes_by_day, by = "date") %>%
+#   mutate(n = replace_na(n, 0), source = replace_na(source, "Filtered episodes"))
+# episodes_all_by_day_filled <- all_dates %>%
+#   left_join(episodes_all_by_day, by = "date") %>%
+#   mutate(n = replace_na(n, 0), source = replace_na(source, "Diarized episodes"))
+# episodes_all_all_by_day_filled <- all_dates %>%
+#   left_join(episodes_all_all_by_day, by = "date") %>%
+#   mutate(n = replace_na(n, 0), source = replace_na(source, "All episodes"))
+# combined_data <- bind_rows(
+#   episodes_by_day_filled,
+#   episodes_all_by_day_filled,
+#   episodes_all_all_by_day_filled
+# )
+# pdf("episodes_time_series_comparison_all.pdf", width = 12, height = 6)
+# print(
+#   ggplot(combined_data, aes(x = date, y = n, color = source)) +
+#     geom_line() +
+#     scale_color_manual(values = c(
+#       "Diarized episodes" = "black",
+#       "Filtered episodes" = "maroon",
+#       "All episodes" = "steelblue"
+#     )) +
+#     labs(x = "Date", y = "Number of Episodes", color = NULL) +
+#     theme_minimal() +
+#     theme(
+#       axis.text = element_text(size = 20),
+#       axis.title = element_text(size = 22),
+#       legend.text = element_text(size = 20)
+#     )
+# )
+# dev.off()
 
 # duration
 episodes$durationMinutes <- episodes$durationSeconds / 60
@@ -109,6 +238,165 @@ speakers_counts <- episodes %>% count(numMainSpeakers, sort = TRUE)
 kable(speakers_counts, format = "latex", booktabs = TRUE, caption = "Unique Speakers with Counts") %>%
   kable_styling(latex_options = c("hold_position", "striped"))
 
+# duration vs length of transcript
+ggplot(episodes, aes(x = durationSeconds, y = sentences)) +
+  geom_point(color = "maroon", alpha = 0.6) +
+  labs(x = "Duration (seconds)",
+       y = "Number of Sentences") +
+  theme_minimal()
+
+ggplot(episodes, aes(x = durationMinutes, y = sentences)) +
+  geom_point(color = "maroon", alpha = 0.6) +
+  labs(x = "Duration (minutes)",
+       y = "Number of Sentences") +
+  theme_minimal()
+
 ################################################################################################
 # PARAGRAPH TURNS
 ################################################################################################
+
+# paragraph turns per episode
+sentence_counts <- paragraph_turns %>%
+  group_by(episode_id) %>%
+  summarise(num_sentences = n())
+sentence_counts <- sentence_counts %>%
+  mutate(sentence_bin = cut(num_sentences, breaks = seq(0, max(num_sentences), by = 100), 
+                            right = FALSE, include.lowest = TRUE, 
+                            labels = paste(seq(0, max(num_sentences) - 100, by = 100), 
+                                           seq(100, max(num_sentences), by = 100), sep = "-")))
+sentence_counts_binned <- sentence_counts %>%
+  mutate(bin = cut(num_sentences, 
+                   breaks = seq(0, max(num_sentences), by = 100), 
+                   right = FALSE, include.lowest = TRUE)) %>%
+  filter(!is.na(bin)) %>%
+  droplevels() %>%
+  count(bin)
+sentence_counts_binned$bin <- gsub("\\[|\\)", "", sentence_counts_binned$bin)  # Remove square and parentheses
+sentence_counts_binned$bin <- gsub(",", "-", sentence_counts_binned$bin)  # Replace comma with hyphen
+sentence_counts_binned$bin <- gsub("600-700]", "600-700", sentence_counts_binned$bin)
+sentence_counts_binned$bin <- factor(sentence_counts_binned$bin, levels = unique(sentence_counts_binned$bin))
+pdf("episodes_turns.pdf", width = 10, height = 6)
+print(ggplot(sentence_counts_binned, aes(x = bin, y = n)) +
+  geom_col(fill = "black") +
+  geom_text(aes(label = n), hjust = -0.2) +
+  labs(x = "Number of Paragraph Turns", y = "Number of Episodes") +
+  coord_flip() +  # Flips the axes so the labels are horizontal
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 16),       # Tick labels
+    axis.title = element_text(size = 18)  # Axis titles
+  ))
+dev.off()
+
+# collectiveAction
+ca_counts <- paragraph_turns %>% count(collectiveAction, sort = TRUE)
+kable(ca_counts, format = "latex", booktabs = TRUE, caption = "Collective Action Counts") %>%
+  kable_styling(latex_options = c("hold_position", "striped"))
+
+# levels of collectiveAction
+ps_counts <- paragraph_turns %>% count(problem_solution, sort = TRUE)
+kable(ps_counts, format = "latex", booktabs = TRUE, caption = "Problem-solution Counts") %>%
+  kable_styling(latex_options = c("hold_position", "striped"))
+cta_counts <- paragraph_turns %>% count(call_to_action, sort = TRUE)
+kable(cta_counts, format = "latex", booktabs = TRUE, caption = "Call-to-action Counts") %>%
+  kable_styling(latex_options = c("hold_position", "striped"))
+int_counts <- paragraph_turns %>% count(intention, sort = TRUE)
+kable(int_counts, format = "latex", booktabs = TRUE, caption = "Intention Counts") %>%
+  kable_styling(latex_options = c("hold_position", "striped"))
+ex_counts <- paragraph_turns %>% count(execution, sort = TRUE)
+kable(ex_counts, format = "latex", booktabs = TRUE, caption = "Execution Counts") %>%
+  kable_styling(latex_options = c("hold_position", "striped"))
+
+# combinations of collectiveAction
+combinations <- paragraph_turns %>%
+  # Remove rows where all four values are 0
+  filter(problem_solution + call_to_action + intention + execution > 0) %>%
+  # Count unique combinations
+  count(problem_solution, call_to_action, intention, execution) %>%
+  # Compute percentage of each group
+  mutate(percentage = n / sum(n) * 100) %>%
+  arrange(desc(n))
+
+binary_matrix <- paragraph_turns %>%
+  select(problem_solution, call_to_action, intention, execution) %>%
+  filter(rowSums(.) > 0)
+co_occurrence <- t(as.matrix(binary_matrix)) %*% as.matrix(binary_matrix)
+co_occurrence_df <- as.data.frame(co_occurrence)
+diag(co_occurrence_df) <- 0
+
+# racialJustice
+rj_counts <- paragraph_turns %>% count(racialJustice, sort = TRUE)
+kable(ca_counts, format = "latex", booktabs = TRUE, caption = "Racial Justice Counts") %>%
+  kable_styling(latex_options = c("hold_position", "striped"))
+
+# collectiveAction percentage per episode
+percentages <- paragraph_turns %>%
+  group_by(episode_id, collectiveAction) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  group_by(episode_id) %>%
+  mutate(percentage = count / sum(count) * 100) %>%
+  select(episode_id, collectiveAction, percentage) %>%
+  pivot_wider(names_from = collectiveAction, 
+              values_from = percentage,
+              names_prefix = "percent_") 
+percentages_binned <- percentages %>%
+  ungroup() %>%  # This is important to ignore grouping by episode_id
+  mutate(bin = cut(
+    percent_0,
+    breaks = seq(0, 100, by = 10),
+    include.lowest = TRUE,
+    right = FALSE,
+    labels = paste(seq(0, 90, by = 10), seq(10, 100, by = 10), sep = "-")
+  )) %>%
+  count(bin)
+pdf("episodes_ca_turns.pdf", width = 10, height = 6)
+ggplot(percentages_binned, aes(x = bin, y = n)) +
+  geom_col(fill = "black") +
+  geom_text(aes(label = n), hjust = -0.2) +
+  labs(x = "% Collective Action Turns", y = "Number of Episodes") +
+  coord_flip() +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 16),       # Tick labels
+    axis.title = element_text(size = 18)  # Axis titles
+  )
+dev.off()
+
+# # duration vs length of paragraph turn
+# ggplot(paragraph_turns, aes(x = duration, y = sentence_length)) +
+#   geom_point(color = "maroon", alpha = 0.6) +
+#   labs(x = "Duration (seconds)",
+#        y = "Number of Words") +
+#   theme_minimal()
+
+# F0 and F1
+paragraph_turns$pitch <- paragraph_turns$F0semitoneFrom27_5Hz_sma3nzMean
+paragraph_turns$vowels <- paragraph_turns$F1frequency_sma3nzMean
+paragraph_turns$action_label <- factor(paragraph_turns$collectiveAction,
+                                       levels = c(0, 1),
+                                       labels = c("Participation", "None"))
+pdf("f0.pdf", width = 10, height = 6)
+ggplot(paragraph_turns, aes(x = pitch, color = action_label)) +
+  geom_density(linewidth = 1.2) +
+  scale_color_manual(values = c("Participation" = "maroon", "None" = "black")) +
+  labs(
+    x = "Fundamental Frequency (F0)",
+    y = "Density",
+    color = "Collective Action"
+  ) +
+  theme_minimal()
+dev.off()
+# t.test(pitch ~ action_label, data = paragraph_turns)
+# wilcox.test(pitch ~ action_label, data = paragraph_turns)
+pdf("f1.pdf", width = 10, height = 6)
+ggplot(paragraph_turns, aes(x = vowels, color = action_label)) +
+  geom_density(linewidth = 1.2) +
+  scale_color_manual(values = c("Participation" = "maroon", "None" = "black")) +
+  labs(
+    x = "First Formant (F1)",
+    y = "Density",
+    color = "Collective Action"
+  ) +
+  theme_minimal()
+dev.off()
+

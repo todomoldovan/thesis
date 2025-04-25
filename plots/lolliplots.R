@@ -4,6 +4,7 @@ library(tidyr)
 library(hrbrthemes)
 
 # # all emotions
+#odds_ratio <- read.csv("odds_ratio.csv")
 odds_ratio_problem_solution <- read.csv("odds_ratio_problem_solution.csv")
 odds_ratio_call_to_action <- read.csv("odds_ratio_call_to_action.csv")
 odds_ratio_intention <- read.csv("odds_ratio_intention.csv")
@@ -39,9 +40,7 @@ data <- odds_ratio_problem_solution %>%
 #                   "guilt_zs",
 #                   "surprise", "surprise_ekman", "surprise_card", "surprise_zs")
 
-custom_order <- c("admiration", "amusement", "desire", "gratitude", "joy", "love", "optimism", "pride",
-                  "anger", "embarrassment", "fear", "remorse", "sadness",
-                  "curiosity", "surprise")
+custom_order <- c("surprise", "love", "optimism", "excitement", "pride", "relief", "fear", "disappointment", "anger", "disgust")
 
 #Reorder the data frame
 data <- data %>%
@@ -62,22 +61,25 @@ data_long <- data_long %>%
 #pdf("lolliplot.pdf", width = 10, height = 6)
 p <- ggplot(data_long) +
   # Draw lines from the min to the max value for each emotion
-  #geom_segment(aes(x = emotion, xend = emotion, y = min_value, yend = max_value, color = variable), linewidth = 1) +  
-  geom_point(aes(x = emotion, y = odds_ratio_value, color = variable), size = 3) +
+  #geom_segment(aes(x = emotion, xend = emotion, y = min_value, yend = max_value, color = variable), linewidth = 1) +
+  geom_hline(yintercept = 1, linetype = "dotted", color = "black") +
+  geom_point(aes(x = emotion, y = odds_ratio_value, color = variable), size = 5) +
   coord_flip() +
   theme_minimal() +
   theme(
     legend.position = "top",  # Place the legend at the top
-    legend.title = element_blank()  # Remove the legend title
+    legend.title = element_blank(),  # Remove the legend title
+    legend.text = element_text(size = 16), 
+    axis.text = element_text(size = 16),       # Tick labels
+    axis.title = element_text(size = 18)  # Axis titles
   ) +
-  scale_color_manual(values = c("value1" = rgb(0.2, 0.7, 0.1, 0.5), 
-                                "value2" = rgb(0.7, 0.2, 0.1, 0.5), 
-                                "value3" = rgb(0.2, 0.2, 0.7, 0.5), 
-                                "value4" = rgb(0.7, 0.7, 0.2, 0.5)),
-                     labels = c("value1" = "Problem-solution", 
-                                "value2" = "Call-to-action", 
-                                "value3" = "Intention", 
-                                "value4" = "Execution")) +  # Label the legend
+  scale_color_brewer(palette = "Spectral",
+                     labels = c(
+                       "value1" = "Problem-solution", 
+                       "value2" = "Call-to-action", 
+                       "value3" = "Intention", 
+                       "value4" = "Execution"
+                     )) +  # Label the legend
   xlab("") +
   ylab("Odds Ratio") +
   guides(color = guide_legend(title = "Variable")) +  # Add a legend title

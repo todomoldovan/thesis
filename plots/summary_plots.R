@@ -6,23 +6,40 @@ library(tidyr)
 library(knitr)
 library(kableExtra)
 library(lubridate)
+library(reshape2)
 
 paragraph_turns <- read_csv("../data/paragraph_turns_ekman.csv")
 paragraph_turns_emotions <- read_csv("../data/paragraph_turns_10emotions.csv")
-paragraph_turns_2 <- read_csv("../data/paragraph_turns_new_emotions.csv")
+#paragraph_turns_2 <- read_csv("../data/paragraph_turns_new_emotions.csv")
 speaker_turns <- read_csv("../data/10ksample_speakerturn_full.csv")
 #episodes_all_all <- read_csv("../data/138ksample.csv")
 episodes_all <- read_csv("../data/episodes_with_id.csv")
 episodes <- read_csv("../data/filtered_episodes_with_id.csv")
+df <- read.csv("../data/category_counts_by_day.csv")
 
 names(paragraph_turns)
 names(episodes)
 
 ################################################################################################
+# TIMELINE OF LEVELS OF PARTICIPATION
+################################################################################################
+df$date <- as.Date(df$date)
+colnames(df) <- c("Date", "Problem-solution", "Call-to-action", "Intention", "Execution")
+df_long <- df %>%
+  pivot_longer(cols = -Date,
+               names_to = "Category",
+               values_to = "Count")
+ggplot(df_long, aes(x = Date, y = Count, color = Category, group = Category)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Category Counts Over Time",
+       x = "Date", y = "Count") +
+  theme_minimal()
+
+################################################################################################
 # EMOTIONS
 ################################################################################################
-emotions_data <- paragraph_turns_2 %>%
-  select(surprise, love, optimism, fear, anger, disgust)
+emotions_data <- paragraph_turns_emotions %>%
+  select(surprise_weighted, love_weighted, optimism_weighted, fear_weighted, anger_weighted, disgust_weighted)
 emotions_long <- emotions_data %>%
   gather(key = "emotion", value = "weight")
 ggplot(emotions_long, aes(x = weight, fill = emotion)) +
@@ -33,16 +50,68 @@ ggplot(emotions_long, aes(x = weight, fill = emotion)) +
        y = "Frequency") +
   theme_minimal() +
   theme(legend.position = "none")
-columns_of_interest <- c("surprise", "love", "optimism", "fear", "anger", "disgust")
-percentiles_85 <- sapply(paragraph_turns_2[columns_of_interest], 
-                         function(x) quantile(x, 0.85, na.rm = TRUE))
-counts_above_85 <- sapply(paragraph_turns_2[columns_of_interest], 
-                           function(x) sum(x > 0.85, na.rm = TRUE))
-
+# columns_of_interest <- c("surprise", "love", "optimism", "fear", "anger", "disgust")
+# percentiles_85 <- sapply(paragraph_turns_2[columns_of_interest], 
+#                          function(x) quantile(x, 0.85, na.rm = TRUE))
+# counts_above_85 <- sapply(paragraph_turns_2[columns_of_interest], 
+#                            function(x) sum(x > 0.85, na.rm = TRUE))
+paragraph_turns_emotions <- paragraph_turns_emotions %>%
+  mutate(across(c(surprise, love, optimism, fear, anger, disgust), 
+                ~replace(., is.na(.), 0)))
 # emotions
-anger_counts <- paragraph_turns_2 %>% count(anger, sort = TRUE)
-kable(anger_counts, format = "latex", booktabs = TRUE, caption = "Anger Counts") %>%
-  kable_styling(latex_options = c("hold_position", "striped"))
+add_percentage <- function(df) {
+  df %>%
+    mutate(percentage = n / sum(n) * 100)
+}
+anger_counts <- paragraph_turns_emotions %>%
+  count(anger, sort = TRUE) %>%
+  add_percentage()
+disappointment_counts <- paragraph_turns_emotions %>%
+  count(disappointment, sort = TRUE) %>%
+  add_percentage()
+disgust_counts <- paragraph_turns_emotions %>%
+  count(disgust, sort = TRUE) %>%
+  add_percentage()
+excitement_counts <- paragraph_turns_emotions %>%
+  count(excitement, sort = TRUE) %>%
+  add_percentage()
+fear_counts <- paragraph_turns_emotions %>%
+  count(fear, sort = TRUE) %>%
+  add_percentage()
+love_counts <- paragraph_turns_emotions %>%
+  count(love, sort = TRUE) %>%
+  add_percentage()
+optimism_counts <- paragraph_turns_emotions %>%
+  count(optimism, sort = TRUE) %>%
+  add_percentage()
+pride_counts <- paragraph_turns_emotions %>%
+  count(pride, sort = TRUE) %>%
+  add_percentage()
+relief_counts <- paragraph_turns_emotions %>%
+  count(relief, sort = TRUE) %>%
+  add_percentage()
+surprise_counts <- paragraph_turns_emotions %>%
+  count(surprise, sort = TRUE) %>%
+  add_percentage()
+
+################################################################################################
+# "TRANSITION" MATRIX
+################################################################################################
+transition_matrix <- matrix(c(
+  1.17, 0.74, 0.73, 0.67,
+  0.70, 2.74, 1.02, 0.92,
+  0.75, 0.88, 2.24, 1.23,
+  0.64, 1.10, 1.17, 2.36
+), nrow = 4, byrow = TRUE)
+rownames(transition_matrix) <- c("Problem-solution", "Call-to-action", "Intention", "Execution")
+colnames(transition_matrix) <- c("Problem-solution", "Call-to-action", "Intention", "Execution")
+df <- melt(transition_matrix)
+ggplot(df, aes(Var2, Var1, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradientn(colors = c("lightpink", "#f4c2c2", "#800000")) +
+  labs(x = "To", y = "From", fill = "Lift") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ################################################################################################
 # EPISODES

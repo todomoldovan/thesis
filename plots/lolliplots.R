@@ -4,17 +4,17 @@ library(tidyr)
 library(hrbrthemes)
 
 # # all emotions
-#odds_ratio <- read.csv("odds_ratio.csv")
-odds_ratio_problem_solution <- read.csv("odds_ratio_problem_solution.csv")
-odds_ratio_call_to_action <- read.csv("odds_ratio_call_to_action.csv")
-odds_ratio_intention <- read.csv("odds_ratio_intention.csv")
-odds_ratio_execution <- read.csv("odds_ratio_execution.csv")
+# #odds_ratio <- read.csv("odds_ratio.csv")
+# odds_ratio_problem_solution <- read.csv("odds_ratio_problem_solution.csv")
+# odds_ratio_call_to_action <- read.csv("odds_ratio_call_to_action.csv")
+# odds_ratio_intention <- read.csv("odds_ratio_intention.csv")
+# odds_ratio_execution <- read.csv("odds_ratio_execution.csv")
 
 # # sentiment-based emotions
-# odds_ratio_problem_solution <- read.csv("odds_ratio_problem_solution_simple.csv")
-# odds_ratio_call_to_action <- read.csv("odds_ratio_call_to_action_simple.csv")
-# odds_ratio_intention <- read.csv("odds_ratio_intention_simple.csv")
-# odds_ratio_execution <- read.csv("odds_ratio_execution_simple.csv")
+odds_ratio_problem_solution <- read.csv("odds_ratio_problem_solution_simple.csv")
+odds_ratio_call_to_action <- read.csv("odds_ratio_call_to_action_simple.csv")
+odds_ratio_intention <- read.csv("odds_ratio_intention_simple.csv")
+odds_ratio_execution <- read.csv("odds_ratio_execution_simple.csv")
 
 names(odds_ratio_problem_solution)[names(odds_ratio_problem_solution) == "category"] <- "emotion"
 names(odds_ratio_call_to_action)[names(odds_ratio_call_to_action) == "category"] <- "emotion"
@@ -58,7 +58,7 @@ data_long <- data_long %>%
   ungroup()
 
 # Plot
-#pdf("lolliplot.pdf", width = 10, height = 6)
+pdf("lolliplot_sentiment.pdf", width = 10, height = 6)
 p <- ggplot(data_long) +
   # Draw lines from the min to the max value for each emotion
   #geom_segment(aes(x = emotion, xend = emotion, y = min_value, yend = max_value, color = variable), linewidth = 1) +
@@ -85,4 +85,4 @@ p <- ggplot(data_long) +
   guides(color = guide_legend(title = "Variable")) +  # Add a legend title
   scale_x_discrete(limits = rev(levels(data_long$emotion))) 
 print(p)
-#dev.off()
+dev.off()
